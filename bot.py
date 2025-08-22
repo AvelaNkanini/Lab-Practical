@@ -5,7 +5,7 @@ import os
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from utils.nlp_utils import get_bot_response  # Updated import for utils folder
+from nlp_utils import get_bot_response  # Updated import for utils folder
 
 # Load environment variables from .env file
 load_dotenv()
