@@ -3,11 +3,20 @@
 from dotenv import load_dotenv
 import os
 import logging
+import spacy
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from nlp_utils import get_bot_response  # Updated import for utils folder
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    ContextTypes,
+    ConversationHandler,
+)
 
-# Load environment variables from .env file
+from nlp_utils import get_bot_response  # Keep your utils import
+
+# Load environment variables
 load_dotenv()
 
 # Logging
@@ -16,17 +25,37 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# Start command
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(
-        "Hello! I am the University Clinic Assistant 🤖. How can I help you today?"
-    )
+# Load SpaCy model
+nlp = spacy.load("en_core_web_sm")
 
-# Handle text messages
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+# Define conversation states
+CHAT = range(1)
+
+# Start command
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text(
+        "Hello! I am the University Clinic Assistant 🤖.\n"
+        "You can ask me about opening hours, bookings, emergencies, or contact info.\n"
+        "Type something to start chatting."
+    )
+    return CHAT
+
+# Handle chat messages
+async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_input = update.message.text
+    # Process input with SpaCy (optional for NLP)
+    doc = nlp(user_input.lower())
+    # Use your existing bot response logic
     response = get_bot_response(user_input)
     await update.message.reply_text(response)
+    return CHAT
+
+# Cancel command
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text(
+        "Conversation ended. Type /start to talk again."
+    )
+    return ConversationHandler.END
 
 def main():
     # Get token from environment
@@ -34,12 +63,20 @@ def main():
     if not token:
         raise ValueError("Please set TELEGRAM_BOT_TOKEN in your .env file")
 
-    # Initialize bot app
+    # Initialize bot application
     app = Application.builder().token(token).build()
 
-    # Handlers
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    # Conversation handler
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", start)],
+        states={
+            CHAT: [MessageHandler(filters.TEXT & ~filters.COMMAND, chat)]
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+    )
+
+    # Add handlers
+    app.add_handler(conv_handler)
 
     # Run bot
     app.run_polling()
