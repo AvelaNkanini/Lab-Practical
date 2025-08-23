@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from dotenv import load_dotenv
-import os
 import logging
+import os
+from dotenv import load_dotenv
 import spacy
 from telegram import Update
 from telegram.ext import (
@@ -13,8 +13,8 @@ from telegram.ext import (
     ContextTypes,
     ConversationHandler,
 )
+from utils.nlp_utils import get_bot_response
 
-from nlp_utils import get_bot_response  # Keep your utils import
 
 # Load environment variables
 load_dotenv()
