@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
 
-import logging
-import os
-from dotenv import load_dotenv
-import spacy
+from typing import Final
 from telegram import Update
 from telegram.ext import (
-    Application,
-    CommandHandler,
-    MessageHandler,
-    filters,
-    ContextTypes,
-    ConversationHandler,
+    Application, CommandHandler, MessageHandler, filters,
+    ContextTypes, ConversationHandler
 )
+import spacy
+
 from utils.nlp_utils import get_bot_response
 
 
